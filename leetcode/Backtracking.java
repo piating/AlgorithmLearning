@@ -4,15 +4,16 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class Backtracking {
 
 
     public static void main(String[] args) {
         Backtracking backtracking = new Backtracking();
-        int[] ints = {1, 2, 3};
-        System.out.println(backtracking.subsets(ints));
+        int[] ints = {1,1,2};
+        int[] ints1 = {4,6,7,7};
+        System.out.println(backtracking.permuteUnique(ints));
+        System.out.println(1);
     }
 
     List<String> listStr = new ArrayList<>();
@@ -21,6 +22,121 @@ public class Backtracking {
     List<List<Integer>> resList = new ArrayList<>();
     LinkedList<Integer> list = new LinkedList<>();
     int targetSum = 0;
+
+    /**
+     * 47, 全排列 II   https://leetcode-cn.com/problems/permutations-ii/
+     * 给定一个可包含重复数字的序列 nums ，按任意顺序 返回所有不重复的全排列。
+     *
+     * @param nums
+     * @return
+     */
+    public List<List<Integer>> permuteUnique(int[] nums) {
+        Arrays.sort(nums);
+        boolean[] judge = new boolean[nums.length];
+        back10(nums, judge);
+        return resList;
+    }
+    private void back10(int[] nums, boolean[] judge) {
+        if (list.size() == nums.length) {
+            resList.add(new ArrayList<>(list));
+            return;
+        }
+        for (int i = 0; i < nums.length; i++) {
+            if ((i > 0 && nums[i] == nums[i - 1] && !judge[i - 1]) || judge[i]) {
+                continue;
+            }
+            list.add(nums[i]);
+            judge[i] = true;
+            back10(nums, judge);
+            list.removeLast();
+            judge[i] = false;
+        }
+    }
+
+    /**
+     * 46 全排列
+     * 给定一个不含重复数字的数组 nums ，返回其 所有可能的全排列 。你可以 按任意顺序 返回答案。
+     * @param nums
+     * @return
+     */
+    public List<List<Integer>> permute(int[] nums) {
+        boolean[] judge = new boolean[nums.length];
+        back9(nums, judge);
+        return resList;
+    }
+    private void back9(int[] nums, boolean[] judge) {
+        if (list.size() == nums.length) {
+            resList.add(new ArrayList<>(list));
+            return;
+        }
+        for (int i = 0; i < nums.length; i++) {
+            if (judge[i]) {
+                continue;
+            }
+            list.add(nums[i]);
+            judge[i] = true;
+            back9(nums, judge);
+            list.removeLast();
+            judge[i] = false;
+        }
+    }
+
+    /**
+     * 491 递增子序列 https://leetcode-cn.com/problems/increasing-subsequences/
+     * 给你一个整数数组 nums ，找出并返回所有该数组中不同的递增子序列，递增子序列中 至少有两个元素 。你可以按 任意顺序 返回答案。
+     * 数组中可能含有重复元素，如出现两个整数相等，也可以视作递增序列的一种特殊情况。
+     * @param nums
+     * @return
+     */
+    public List<List<Integer>> findSubsequences(int[] nums) {
+        back8(nums, 0);
+        return resList;
+    }
+    private void back8(int[] nums, int startIndex) {
+        if (list.size() > 1) {
+            resList.add(new ArrayList<>(list));
+        }
+        int[] used = new int[201];
+        for (int i = startIndex; i < nums.length; i++) {
+            if (!list.isEmpty() && nums[i] < list.getLast() || (used[nums[i] + 100] == 1)) {
+                continue;
+            }
+            used[nums[i] + 100] = 1;
+            list.add(nums[i]);
+            back8(nums, i + 1);
+            list.removeLast();
+        }
+    }
+
+    /**
+     * 90 子集II https://leetcode-cn.com/problems/subsets-ii/
+     * 给你一个整数数组 nums ，其中可能包含重复元素，请你返回该数组所有可能的子集（幂集）。
+     * 解集 不能 包含重复的子集。返回的解集中，子集可以按 任意顺序 排列。
+     * @param nums
+     * @return
+     */
+    public List<List<Integer>> subsetsWithDup(int[] nums) {
+        Arrays.sort(nums);
+        boolean[] flag = new boolean[nums.length];
+        back7(nums, 0, flag);
+        return resList;
+    }
+    private void back7(int[] nums, int startIndex, boolean[] flag) {
+        resList.add(new ArrayList<>(list));
+        if (list.size() >= nums.length) {
+            return;
+        }
+        for (int i = startIndex; i < nums.length; i++) {
+            if (i > startIndex && nums[i] == nums[i - 1] && !flag[i - 1]) {
+                continue;
+            }
+            flag[i] = true;
+            list.add(nums[i]);
+            back7(nums, i + 1, flag);
+            flag[i] = false;
+            list.removeLast();
+        }
+    }
 
     /**
      * 78 子集 https://leetcode-cn.com/problems/subsets/
