@@ -1,0 +1,112 @@
+题目：
+
+给定一个数轴上有n辆车，每辆车初始在一个位置pos，有一个速度v，求所有车集合到同一个点的最小时间，车辆没有体积可以重叠
+
+返回值：最小集合时间
+
+数据范围：
+
+0 <= n <= 1e5  
+-1e9 <= pos,v <= 1e9
+
+Tips 
+规定某个集合点之后  先到达的小车可以停下，速度没有负的 ，小车可以往两边开
+比如 A在 (-1,0)  B在(1,0) 两辆车速度都为1，集合点就是0，最小集合时间为1秒
+没有拿到具体题目，没有考虑集合时间为小数，集合点不为整数的情况，假设答案都是整数
+
+     
+
+
+思路：
+读完题目首先看到要求一个集合的最短时间，正常的思路就是尝试去找一个点，然后算一下所有车到这个点的时间，
+显然集合点肯定是会在两端车的中间 ，所以最笨的方法就是枚举每一个点，然后再算一遍所有车到这个点的时间，
+可以看到区间范围是2e9，车的数量是1e5 ，最差的时间复杂度是2e14，当然这种方法肯定可以通过部分样例，
+但显然是行不通的。这时候其实就可以换下思路，其实一般看到问题里问 “ *****最大/最小****** ” 这种问题，
+一般来说，就是考两类知识点，动态规划和二分，这道题其实考察的就是二分
+我们来看下怎么二分，题目问集合的最小时间，那我们就直接二分时间，那么怎么判断这个时间合法与否呢
+显然每辆车在一个时间里，可以向左到达一个最远点，向右到达一个最远点，是一段区间，所以我们只要每次判断
+在这个时间内，所有车的覆盖区间是否有重合，说明都可以到达同一块地方，说明这个答案合法，可以继续缩小，反之
+这个答案不合法，要向上查找。如何判断所有车的覆盖区间有重合？只要每个区间的左端点的最大 小于等于
+每个区间右端点的最小 就说明这n个区间是有重合的。
+
+几个细节需要注意
+1.在计算time*v的时候会爆int ，所以需要long long
+2.左右端点的初始化值要设置为2e18，因为极限情况某辆车在1e9这个点，速度为1e9，跑1e9秒，右端点可以达到1e18+1e9
+
+同时为了避免二分最终结果与实际相差+-1的问题（应该很多人都有这种问题吧）
+在l，r相差10的时候直接暴力算，经过在OJ上多次试验，可以有效避免这个问题
+
+
+代码：
+-C 代码
+
+#include <stdio.h>
+#define MAXNLEN 100005
+#define INF 2e18
+#define TIMEINF 1e9
+long long max(long long x, long long y)
+{
+    return x >= y ? x : y;
+}
+long long min(long long x, long long y)
+{
+    return x <= y ? x : y;
+}
+int check(int time, int carnums, int *carpos, int *carspeed)
+{
+    long long leftmax = -INF;
+    long long rightmin = INF;
+    // 左边最大≤右边最小
+    for (int i = 0; i < carnums; i++) {
+        leftmax = max(leftmax, (long long)carpos[i] - (long long)time * carspeed[i]);
+        rightmin = min(rightmin, (long long)carpos[i] + (long long)time * carspeed[i]);
+    }
+    if (leftmax <= rightmin) {
+        return 1;
+    }
+    return 0;
+}
+int gathertime(int carnums, int *carpos, int *carspeed)
+{
+    // 二分时间，看所有车能到达的区间
+    long long l, r, mid;
+    l = 0;
+    r = TIMEINF;
+    mid = (r + l) / 2;
+    while (l +10 < r) {
+        if (check(mid, carnums, carpos, carspeed)) {
+            r = mid;
+        } else {
+            l = mid + 1;
+        }
+        mid = (l + r) / 2;
+    }
+    int ans = 0;
+    for (int i = l; i <= r; i++) {
+        if (check(i, carnums, carpos, carspeed)) {
+            ans = i;
+            break;
+        }
+    }
+    return ans;
+}
+int main()
+{
+    int carnums = 0;
+    int carspeed[MAXNLEN] = {0};
+    int carpos[MAXNLEN] = {0};
+    scanf("%d", &carnums);
+    for (int i = 0; i < carnums; i++) {
+        scanf("%d%d", &carpos[i], &carspeed[i]);
+    }
+    int ans = gathertime(carnums, carpos, carspeed);
+    printf("%d\n", ans);
+}
+/*
+2
+-10000 10000
+10000 10000
+ 
+1
+1 1
+*/
